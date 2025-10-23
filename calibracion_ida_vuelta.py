@@ -12,6 +12,7 @@ import tifffile as tiff
 from PIL import Image
 import pandas as pd
 from scipy.signal import find_peaks
+import scan_datafile as sd
 plt.style.use(r"C:\Users\Luis1\Downloads\gula_style.mplstyle")
 plt.rcParams["text.usetex"] = False
 plt.rcParams["font.family"] = "serif"
@@ -21,27 +22,32 @@ path = "C:\\Users\\Luis1\\Downloads\\"
 sys.path.append(path)
 import matplotvanda as vd
 
-
-def graficar_ida(x,y,imagen):
-    fig, ax = plt.subplots(constrained_layout=True)
-    im = ax.imshow(imagen, cmap='inferno',
-                   extent=[x.min(), x.max(), y.min(), y.max()],
-                   origin='lower')   # origin='lower' para que y vaya de abajo hacia arriba
-
-    ax.set_title("(ida) ", fontsize=12, fontweight='bold')
-    ax.set_xlabel("x [µm]")
-    ax.set_ylabel("y [µm]")
-    fig.colorbar(im, ax=ax, label="Número de fotones")
-    ax.set_aspect('equal', adjustable='box')    
-def graficar_vuelta(x,y,imagen):
-    imagen = np.flip(imagen, axis=1)
-    fig, ax = plt.subplots(constrained_layout=True)
-    im = ax.imshow(imagen, cmap='inferno',
-                   extent=[x.min(), x.max(), y.min(), y.max()],
-                   origin='lower')   # origin='lower' para que y vaya de abajo hacia arriba
+def graficar(imagen, pixel_size_um=1, titulo="(ida)"):
+    """
+    Muestra la imagen directamente, calculando los ejes físicos automáticamente.
     
-    ax.set_title("(Vuelta) ", fontsize=12, fontweight='bold')
+    Parámetros
+    ----------
+    imagen : 2D array
+        Matriz de intensidades (e.g., número de fotones por píxel).
+    pixel_size_um : float, opcional
+        Tamaño físico de cada píxel en µm (por defecto 1 µm/píxel).
+    titulo : str, opcional
+        Título que se muestra en la figura.
+    """
+    # Calcular ejes físicos
+    imagen = imagen.T
+    nx, ny = imagen.shape
+    x_extent = nx * pixel_size_um
+    y_extent = ny * pixel_size_um
 
+    fig, ax = plt.subplots(constrained_layout=True)
+    im = ax.imshow(imagen, cmap='inferno',
+                   extent=[0, x_extent, 0, y_extent],
+                   origin='lower',
+                   aspect='equal')
+
+    ax.set_title(titulo, fontsize=12, fontweight='bold')
     ax.set_xlabel("x [µm]")
     ax.set_ylabel("y [µm]")
     fig.colorbar(im, ax=ax, label="Número de fotones")
@@ -99,4 +105,7 @@ def delta_ida_vuelta(file_name, px_size, dwell_time):
     
     
 #hacemos la curva de calibración:
+p = sd.ScanDataFile.open(r"C:\Users\Luis1\Downloads\Calibracion_ida_vuelta\10x10\calibracion_10x10_00_scan.NPY")
 
+graficar(p[0][0], 0.050)
+graficar(p[0][1], 0.050)
